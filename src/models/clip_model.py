@@ -59,7 +59,6 @@ def load_clip_model(
             raise FileNotFoundError(f"LoRA weights not found at {lora_weights_path}")
 
         print(f"[clip_model] Loading LoRA weights from: {lora_weights_path}")
-        # Bungkus base_model dengan PeftModel yang sudah disimpan
         model = PeftModel.from_pretrained(base_model, lora_weights_path)
     else:
         model = base_model
@@ -93,7 +92,6 @@ def encode_image(
     inputs = processor(images=image, return_tensors="pt")
     pixel_values = inputs["pixel_values"].to(device)
 
-    # Samakan dtype dengan model
     model_dtype = next(model.parameters()).dtype
     pixel_values = pixel_values.to(dtype=model_dtype)
 

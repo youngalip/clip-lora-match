@@ -1,0 +1,33 @@
+# Core ML & DL
+torch
+torchvision
+transformers
+accelerate
+peft
+
+# YOLOv8
+ultralytics
+
+# Data & utils
+numpy
+pandas
+scipy
+tqdm
+Pillow
+pyyaml
+python-dotenv
+
+# API (FastAPI)
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic>=2
+
+# Database & vector search
+SQLAlchemy
+psycopg2-binary
+pgvector
+
+# Optional: evaluation & experiments
+scikit-learn
+jupyter

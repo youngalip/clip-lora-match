@@ -1,0 +1,23 @@
+model:
+  name: "openai/clip-vit-base-patch32"
+  pretrained: true
+  device: "cuda"          # ganti "cpu" kalau belum pakai GPU
+  dtype: "float16"        # bisa diganti "float32" kalau pakai CPU
+
+preprocess:
+  image_size: 224         # standar CLIP ViT-B/32
+  center_crop: true
+  normalize:
+    mean: [0.48145466, 0.4578275, 0.40821073]
+    std: [0.26862954, 0.26130258, 0.27577711]
+  max_text_length: 77
+  truncate: true
+
+paths:
+  lora_weights_dir: "models/clip/lora"     # tempat nyimpen/adapt LoRA
+  checkpoints_dir: "models/saved"         # tempat checkpoints training
+  logs_dir: "logs/clip"                   # optional, buat tensorboard/logging
+
+inference:
+  batch_size: 16
+  num_workers: 4

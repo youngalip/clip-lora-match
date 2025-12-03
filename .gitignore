@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Virtual env
+venv/
+.env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data besar / eksternal
+data/external/
+data/raw/
+data/cropped/
+data/processed/
+
+# Model checkpoints
+models/saved/
+models/clip/base/
+models/yolo/
+
+# Cache
+.cache/
+logs/

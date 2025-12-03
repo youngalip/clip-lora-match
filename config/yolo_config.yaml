@@ -1,0 +1,18 @@
+model:
+  name: "yolov8s"
+  weights_path: "models/yolo/yolov8s.pt"   # taruh file di sini nanti
+  device: "cuda"                           # atau "cpu"
+  imgsz: 640                               # resolusi inference YOLO
+
+inference:
+  conf_threshold: 0.25
+  iou_threshold: 0.45
+  max_det: 5                               # maksimal objek per gambar
+  classes: null                            # null = semua class YOLO
+  agnostic_nms: false
+
+crop:
+  enabled: true
+  save_dir: "data/cropped"
+  # pola nama file crop, {stem} = nama file tanpa ekstensi, {idx} = index bbox
+  filename_pattern: "{stem}_crop_{idx}.jpg"

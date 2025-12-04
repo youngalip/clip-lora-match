@@ -9,12 +9,19 @@ from typing import Optional, List
 import shutil
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # ⬅️ NEW
 
-from src.api.schemas import ReportItemResponse, SearchResponse, SearchResultModel
+from src.api.schemas import (
+    ReportItemResponse,
+    SearchResponse,
+    SearchResultModel,
+    FoundItemModel,  # ⬅️ NEW
+)
 from src.embedding.finder_service import FinderConfig, FinderService
 from src.embedding.seeker_service import SeekerConfig, SeekerService
 from src.embedding.search import SearchResult  # tipe hasil internal
 
+from src.db.db import get_connection
 
 # -----------------------------------------
 # Setup root & config global
@@ -69,6 +76,14 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# Static files: serve semua isi folder data/ di bawah /static
+# contoh: data/custom/images/...  ->  /static/custom/images/...
+app.mount(
+    "/static",
+    StaticFiles(directory=str(ROOT_DIR / "data")),
+    name="static",
 )
 
 
@@ -233,3 +248,47 @@ async def search_items(
         results=results_out,
     )
 
+
+# -----------------------------------------
+# Endpoint: list semua barang ditemukan (dari DB)
+# -----------------------------------------
+@app.get("/api/items", response_model=List[FoundItemModel])
+def list_found_items():
+    """
+    List semua barang yang sudah dilaporkan penemu (tabel found_items).
+    Dipakai untuk:
+    - dashboard admin/petugas
+    - cek isi database dari luar
+    """
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT id, image_path, description, location, found_at, reporter
+            FROM found_items
+            ORDER BY found_at DESC
+            """
+        )
+        rows = cur.fetchall()
+    except Exception as e:
+        print(f"[api/items] DB error: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
+
+    return [
+        FoundItemModel(
+            id=row[0],
+            image_path=row[1],
+            description=row[2],
+            location=row[3],
+            found_at=row[4],
+            reporter=row[5],
+        )
+        for row in rows
+    ]

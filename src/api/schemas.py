@@ -27,3 +27,11 @@ class SearchResponse(BaseModel):
     query_text: Optional[str] = None
     query_image_path: Optional[str] = None
     results: List[SearchResultModel]
+
+class FoundItemModel(BaseModel):
+    id: int
+    image_path: str
+    description: str
+    location: Optional[str] = None
+    found_at: datetime
+    reporter: Optional[str] = None

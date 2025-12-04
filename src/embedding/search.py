@@ -76,17 +76,23 @@ class TextSearchIndex:
         Pencarian dengan embedding query (sudah di-encode di luar).
         query_emb: shape (d,) atau (1, d), float32 CPU.
         """
+        # Normalisasi bentuk ke (1, d)
         if query_emb.ndim == 1:
             query_emb = query_emb.unsqueeze(0)  # (1, d)
+        elif query_emb.ndim != 2 or query_emb.shape[0] != 1:
+            raise ValueError(
+                f"query_emb must be shape (d,) or (1, d), got {tuple(query_emb.shape)}"
+            )
+
         if query_emb.shape[-1] != self.dim:
             raise ValueError(
                 f"query_emb dim {query_emb.shape[-1]} != index dim {self.dim}"
             )
 
-        # Normalize query juga
+        # Normalize query
         query_emb = query_emb / query_emb.norm(dim=-1, keepdim=True)
 
-        # Dot product dengan semua embedding index
+        # Cosine sim (dot product karena sudah dinormalisasi)
         sims = torch.matmul(query_emb, self.embeddings.T).squeeze(0)  # (N,)
 
         k = min(top_k, self.num_items)
@@ -94,17 +100,19 @@ class TextSearchIndex:
 
         results: List[SearchResult] = []
         for idx, score in zip(indices.tolist(), scores.tolist()):
+            # ⬇⬇⬇ PERBEDAAN PENTING: safe indexing
+            img = self.image_paths[idx] if idx < len(self.image_paths) else ""
+            txt = self.texts[idx] if idx < len(self.texts) else ""
             results.append(
                 SearchResult(
                     index=idx,
                     score=float(score),
-                    image_path=self.image_paths[idx],
-                    text=self.texts[idx],
+                    image_path=img,
+                    text=txt,
                 )
             )
 
         return results
-
 
     def search_by_text(
         self,

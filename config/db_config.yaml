@@ -1,0 +1,6 @@
+postgres:
+  host: "localhost"
+  port: 5432
+  user: "postgres"        # ganti kalau user DB-mu beda
+  password: "admin123"  # GANTI dengan password asli
+  dbname: "balikkin_db"   # ganti sesuai nama database yang kamu pakai

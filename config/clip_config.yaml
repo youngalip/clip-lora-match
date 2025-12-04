@@ -1,8 +1,8 @@
 model:
   name: "openai/clip-vit-base-patch32"
   pretrained: true
-  device: "cuda"          # ganti "cpu" kalau belum pakai GPU
-  dtype: "float16"        # bisa diganti "float32" kalau pakai CPU
+  device: "cpu"          # ganti "cpu" kalau belum pakai GPU
+  dtype: "float32"        # bisa diganti "float32" kalau pakai CPU
 
 preprocess:
   image_size: 224         # standar CLIP ViT-B/32

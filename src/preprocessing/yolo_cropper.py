@@ -7,6 +7,7 @@ import yaml
 from ultralytics import YOLO
 from PIL import Image
 
+import torch
 
 class YoloCropper:
     """
@@ -21,6 +22,13 @@ class YoloCropper:
         model_cfg = self.config.get("model", {})
         weights_path = model_cfg.get("weights_path")
         device = model_cfg.get("device", "cpu")
+
+        # Fallback otomatis kalau minta cuda tapi tidak tersedia
+        if device.startswith("cuda") and not torch.cuda.is_available():
+            print("[YoloCropper] CUDA tidak tersedia, fallback ke CPU.")
+            device = "cpu"
+
+        self.device = device
 
         # Load YOLO model (bisa pakai path .pt atau nama model seperti 'yolov8s')
         if weights_path and Path(weights_path).exists():

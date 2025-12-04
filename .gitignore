@@ -26,3 +26,5 @@ models/yolo/
 # Cache
 .cache/
 logs/
+
+.env

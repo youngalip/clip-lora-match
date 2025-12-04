@@ -21,29 +21,45 @@ class SearchResult:
 
 
 class TextSearchIndex:
-    """
-    Index pencarian berbasis embedding teks CLIP+LoRA.
-
-    Cara pakai (high-level):
-
-        index = TextSearchIndex("data/index/fashion_text_index.pt")
-        results = index.search_by_text("black leather bag", model, processor, device, top_k=5)
-    """
-
-    def __init__(self, index_path: Union[str, Path]):
+    def __init__(self, index_path: Path):
         index_path = Path(index_path)
         if not index_path.exists():
             raise FileNotFoundError(f"Index file not found: {index_path}")
 
-        print(f"[TextSearchIndex] Loading index from: {index_path}")
         obj = torch.load(index_path, map_location="cpu")
 
-        self.embeddings: torch.Tensor = obj["embeddings"]  # (N, d)
-        self.image_paths: list[str] = obj["image_path"]
-        self.texts: list[str] = obj["text"]
+        # Embedding wajib ada
+        embs = obj.get("embeddings")
+        if embs is None:
+            raise ValueError("Index file does not contain 'embeddings'")
 
-        if self.embeddings.ndim != 2:
-            raise ValueError("embeddings must be 2D (N, d)")
+        self.embeddings: torch.Tensor = embs.float()
+        if self.embeddings.dim() == 1:
+            self.embeddings = self.embeddings.unsqueeze(0)
+
+        # image_paths bisa disimpan dengan key berbeda
+        images = obj.get("image_paths")
+        if images is None:
+            images = obj.get("image_path")
+        if images is None:
+            images = []
+
+        self.image_paths: list[str] = list(images)
+
+        # texts juga bisa beda key
+        texts = obj.get("texts")
+        if texts is None:
+            texts = obj.get("text")
+        if texts is None:
+            texts = []
+
+        self.texts: list[str] = list(texts)
+
+        if self.embeddings.size(0) != len(self.image_paths):
+            print(
+                f"[TextSearchIndex] WARNING: embeddings rows ({self.embeddings.size(0)}) "
+                f"!= len(image_paths) ({len(self.image_paths)})"
+            )
 
         self.num_items, self.dim = self.embeddings.shape
         print(f"[TextSearchIndex] Loaded {self.num_items} items with dim={self.dim}")
@@ -89,6 +105,7 @@ class TextSearchIndex:
 
         return results
 
+
     def search_by_text(
         self,
         query: str,
@@ -103,4 +120,24 @@ class TextSearchIndex:
         - hitung similarity dengan index
         """
         query_emb = encode_text(query, model, processor, device)
+        return self.search_with_embedding(query_emb, top_k=top_k)
+    
+    def search_by_image(
+        self,
+        image_path: Union[str, Path],
+        model: CLIPModel,
+        processor: CLIPProcessor,
+        device: torch.device,
+        top_k: int = 5,
+    ) -> List[SearchResult]:
+        """
+        Pencarian berbasis gambar:
+        - encode gambar dengan CLIP+LoRA
+        - pakai embedding gambar untuk mencari di index (yang berisi embedding teks)
+
+        image_path: path ke file gambar (relatif terhadap root project atau absolut).
+        """
+        from models.clip_model import encode_image  # import lokal untuk hindari circular
+
+        query_emb = encode_image(image_path, model, processor, device)
         return self.search_with_embedding(query_emb, top_k=top_k)

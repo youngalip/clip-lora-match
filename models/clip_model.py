@@ -7,6 +7,7 @@ from typing import Optional, Tuple, Union
 
 import torch
 import yaml
+from PIL import Image  # <-- tambahkan ini
 from transformers import CLIPModel, CLIPProcessor
 from peft import PeftModel
 
@@ -52,6 +53,8 @@ def load_clip_model(
     device = _get_device(device_cfg)
     dtype = _get_dtype(dtype_cfg, device)
 
+    print(f"[clip_model] Loading CLIP model '{model_name}' on device: {device} (dtype={dtype})")
+
     # Load base CLIP
     model = CLIPModel.from_pretrained(model_name)
     model.to(device=device, dtype=dtype)
@@ -73,9 +76,75 @@ def load_clip_model(
             else:
                 print(f"[clip_model] Loading LoRA weights from: {lora_path}")
                 model = PeftModel.from_pretrained(model, str(lora_path))
-                # Untuk inference, kamu bisa pilih mau merge atau tidak.
-                # Di sini kita biarkan sebagai PeftModel supaya fleksibel untuk fine-tuning lanjutan.
                 model.to(device=device, dtype=dtype)
 
     model.eval()
     return model, processor, device
+
+
+# =========================
+#  Tambahan: helper inference
+# =========================
+
+def encode_image(
+    image_path: Union[str, Path],
+    model: CLIPModel,
+    processor: CLIPProcessor,
+    device: torch.device,
+) -> torch.Tensor:
+    """
+    Encode satu gambar menjadi embedding CLIP ter-normalisasi.
+
+    Return:
+        embedding shape (d,) di CPU (torch.float32)
+    """
+    image_path = Path(image_path)
+    if not image_path.exists():
+        raise FileNotFoundError(f"Image not found: {image_path}")
+
+    image = Image.open(image_path).convert("RGB")
+
+    inputs = processor(images=image, return_tensors="pt")
+    pixel_values = inputs["pixel_values"].to(device)
+
+    # Samakan dtype dengan model
+    model_dtype = next(model.parameters()).dtype
+    pixel_values = pixel_values.to(dtype=model_dtype)
+
+    with torch.no_grad():
+        image_features = model.get_image_features(pixel_values=pixel_values)
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+
+    return image_features.squeeze(0).to("cpu", torch.float32)
+
+
+def encode_text(
+    text: str,
+    model: CLIPModel,
+    processor: CLIPProcessor,
+    device: torch.device,
+) -> torch.Tensor:
+    """
+    Encode satu kalimat teks menjadi embedding CLIP ter-normalisasi.
+
+    Return:
+        embedding shape (d,) di CPU (torch.float32)
+    """
+    inputs = processor(
+        text=[text],
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+    )
+
+    input_ids = inputs["input_ids"].to(device)
+    attention_mask = inputs["attention_mask"].to(device)
+
+    with torch.no_grad():
+        text_features = model.get_text_features(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+        )
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+
+    return text_features.squeeze(0).to("cpu", torch.float32)

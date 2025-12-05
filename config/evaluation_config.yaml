@@ -1,0 +1,94 @@
+# config/evaluation_config.yaml
+
+# Path Configuration
+paths:
+  # Data paths - sesuaikan dengan struktur Anda
+  data_dir: "data/text"
+  train_csv: "data/text/train_fashion.csv"
+  val_csv: "data/text/val_fashion.csv"
+  test_csv: "data/text/val_fashion.csv"  # Gunakan val sebagai test untuk sementara
+  
+  # Image root directory
+  image_root: "data/text/images"  # Sesuaikan dengan lokasi gambar Anda
+  
+  # Model paths
+  clip_config: "config/clip_config.yaml"
+  lora_dir: "models/saved/clip-lora"
+  
+  # Output paths
+  results_dir: "results"
+  plots_dir: "results/plots"
+  qualitative_dir: "results/qualitative"
+
+# Model Configuration
+models:
+  base_model_name: "Base CLIP (No LoRA)"
+  
+  # Epoch yang sudah di-train
+  lora_epochs: [1]  # Hanya epoch 1 karena baru train 1 epoch
+  
+  # Epoch terbaik untuk evaluasi detail
+  best_epoch: 1
+
+# Evaluation Settings
+evaluation:
+  # Retrieval metrics
+  recall_k_values: [1, 5, 10]
+  
+  # Qualitative analysis
+  num_failure_cases: 10
+  num_top_k_visualize: 5
+  
+  # Embedding visualization
+  embedding_viz_method: "tsne"  # atau "umap"
+  
+  # Skip evaluations (untuk testing cepat)
+  skip_base: false
+  skip_qualitative: false
+
+# Zero-Shot Classification (opsional)
+zero_shot:
+  enabled: false  # Set true jika punya data classification
+  test_csv: "data/text/test_classification.csv"
+  
+  # Class templates untuk fashion items
+  class_templates:
+    dress:
+      - "a photo of a dress"
+      - "dress"
+      - "women's dress"
+    
+    shirt:
+      - "a photo of a shirt"
+      - "shirt"
+      - "t-shirt"
+    
+    pants:
+      - "a photo of pants"
+      - "pants"
+      - "trousers"
+    
+    shoes:
+      - "a photo of shoes"
+      - "shoes"
+      - "footwear"
+    
+    bag:
+      - "a photo of a bag"
+      - "handbag"
+      - "bag"
+
+# Visualization Settings
+visualization:
+  dpi: 300
+  figsize_comparison: [12, 6]
+  figsize_progress: [14, 10]
+  figsize_heatmap: [10, 6]
+  
+  # Color schemes
+  colormap: "YlGnBu"
+  
+# Device Configuration
+device:
+  use_gpu: false  # Set true jika ada GPU
+  dtype: "float32"

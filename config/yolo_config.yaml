@@ -12,7 +12,7 @@ inference:
   agnostic_nms: false
 
 crop:
-  enabled: true
+  enabled: false
   save_dir: "data/cropped"
   # pola nama file crop, {stem} = nama file tanpa ekstensi, {idx} = index bbox
   filename_pattern: "{stem}_crop_{idx}.jpg"

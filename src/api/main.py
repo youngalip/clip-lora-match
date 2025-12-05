@@ -29,9 +29,10 @@ from src.db.db import get_connection
 ROOT_DIR = Path(__file__).resolve().parents[2]
 
 CLIP_CONFIG = ROOT_DIR / "config" / "clip_config.yaml"
-LORA_DIR = ROOT_DIR / "models" / "saved" / "clip-lora" / "epoch_1"
+LORA_DIR = ROOT_DIR / "models" / "saved" / "clip-lora" / "epoch_5"
 INDEX_PATH = ROOT_DIR / "data" / "index" / "custom_items_index.pt"
-YOLO_CONFIG = ROOT_DIR / "config" / "yolo_config.yaml"
+YOLO_CONFIG = None
+#YOLO_CONFIG = ROOT_DIR / "config" / "yolo_config.yaml"
 
 REPORTED_IMAGES_DIR = ROOT_DIR / "data" / "reported" / "images"
 REPORTED_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
